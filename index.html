@@ -7,12 +7,18 @@
     <title>Fabric js testing</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/3.6.2/fabric.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <!-- If you want Popper v2 -->
     <script src="https://unpkg.com/@popperjs/core@2"></script>
+
+    <!-- If you want Popper v1 -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script> -->
+
     <link rel="stylesheet" href="index.css" />
     <script src="index.js"></script>
   </head>
   <body>
-    <div class="canvas-div-container">
+    <div class="canvas-div-container" id="canvas-div-container">
       <canvas id="c" width="400" height="400"></canvas>
       <div class="popper-reference" id="popper-reference"></div>
     </div>

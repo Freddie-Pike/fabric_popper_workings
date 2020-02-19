@@ -64,6 +64,10 @@ $(document).ready(function() {
   //     }
   //   }
   // };
+
+  const popperBoundaryContainer = $("#canvas-div-container");
+
+  // Popper v2
   var popperInstance = Popper.createPopper($("#popper-reference")[0], $("#popper-popover")[0], {
     placement: "right-start",
     // strategy: 'fixed',
@@ -73,32 +77,36 @@ $(document).ready(function() {
         options: {
           offset: [-10, 20]
         }
+      },
+      {
+        name: "flip",
+        enabled: true,
+        options: {
+          boundary: popperBoundaryContainer[0]
+        }
       }
     ]
   });
 
-  canvas.on("object:moving", function(markup) {
-    console.log("Moving A rectangle");
-    console.log(markup);
-    // console.log(markup.target.left);
-    // console.log(markup.target.top);
+  // Popper V1
+  // var popperInstance = new Popper($("#popper-reference")[0], $("#popper-popover")[0], {
+  //   placement: "right-start",
+  //   modifiers: {
+  //     preventOverflow: {
+  //       boundariesElement: popperBoundaryContainer[0]
+  //     }
+  //   }
+  // });
 
+  canvas.on("object:moving", function(markup) {
     updatePopperReference(markup);
     popperInstance.update();
   });
   canvas.on("object:scaling", function(markup) {
-    console.log("Scaling A rectangle");
-    console.log(markup);
-    // console.log(markup.target.left);
-    // console.log(markup.target.top);
-
     updatePopperReference(markup);
     popperInstance.update();
   });
   canvas.on("object:rotating", function(markup) {
-    console.log("Rotating A rectangle");
-    console.log(markup);
-
     updatePopperReference(markup);
     popperInstance.update();
   });
