@@ -1,8 +1,9 @@
+let popperInstance = null;
+
 function updatePopperReference(markup, isFabricEvent = true) {
   if (isFabricEvent) {
-    // Can use markup.target as shorthand but just bein' wild.
-    $("#popper-reference").css("left", markup.transform.target.left);
-    $("#popper-reference").css("top", markup.transform.target.top);
+    $("#popper-reference").css("left", markup.target.left);
+    $("#popper-reference").css("top", markup.target.top);
     $("#popper-reference").css("width", markup.target.getScaledWidth());
     $("#popper-reference").css("height", markup.target.getScaledHeight());
     $("#popper-reference").css("transform", `rotate(${markup.target.angle}deg)`);
@@ -21,56 +22,57 @@ async function updatePopperPlacement(popperInstance, newPlacement) {
 
 $(document).ready(function() {
   var canvas = new fabric.Canvas("c");
-
   rect = new fabric.Rect({
     left: 80,
     top: 80,
     width: 25,
     height: 100,
     fill: "transparent",
-    stroke: "green",
+    stroke: "blue",
     strokeWidth: 5
   });
+  canvas.add(rect);
   updatePopperReference(rect, false);
 
-  // const topLogger = {
-  //   name: "topLogger",
-  //   enabled: true,
-  //   phase: "main",
-  //   fn(popperInfo) {
-  //     // console.log(`popper popperInfo is`);
-  //     // console.log(popperInfo);
-  //     console.log(popperInfo.state.elements.reference.style.transform);
-  //     let rotation = popperInfo.state.elements.reference.style.transform;
-  //     let rotationDeg = rotation.split(/[()]/)[1];
-  //     rotation = parseFloat(rotationDeg.substring(0, rotationDeg.length - 3));
-  //     if (Math.sign(rotation) === -1) {
-  //       console.log("negative rotation");
-  //       return;
-  //     }
+  // Creating the modifier that follows the popover on rotating. Declaring default
+  // popperPosition of "right" which gets overridden immeditately by the modifier.
+  // The default position of right is another method of following the markup.
+  var popperPosition = "right";
+  const followPopoverOnRotationModifier = {
+    name: "followMarkupCardRotation",
+    enabled: true,
+    phase: "main",
+    fn(popperInfo) {
+      // I kind of hate the next 3 lines, ngl haha.
+      // Got to grab rotation from css transform
+      let rotation = popperInfo.state.elements.reference.style.transform;
+      let rotationDeg = rotation.split(/[()]/)[1];
+      rotation = parseFloat(rotationDeg.substring(0, rotationDeg.length - 3));
 
-  //     if (rotation >= 0 && rotation < 90) {
-  //       updatePopperPlacement(popperInstance, rotation);
-  //       console.log("bottom-start");
-  //     } else if (rotation >= 90 && rotation < 180) {
-  //       updatePopperPlacement(popperInstance, rotation);
-  //       console.log("top-start");
-  //     } else if (rotation >= 180 && rotation < 270) {
-  //       updatePopperPlacement(popperInstance, rotation);
-  //       console.log("right-start");
-  //     } else if (rotation >= 270 && rotation < 360) {
-  //       updatePopperPlacement(popperInstance, rotation);
-  //       console.log("bottom-end");
-  //     }
-  //   }
-  // };
+      // Rotation starts off as -1 as a default, this return.
+      if (Math.sign(rotation) === -1) {
+        console.log("negative rotation so return");
+        return;
+      }
 
-  const popperBoundaryContainer = $("#canvas-div-container");
+      // Check the rotation from 0-360 and changing the position to make the placement change as
+      // smooth as possible.
+      console.log(rotation);
+      if (rotation >= 0 && rotation < 90) {
+        popperPosition = "right-start";
+      } else if (rotation >= 90 && rotation < 180) {
+        popperPosition = "right-end";
+      } else if (rotation >= 180 && rotation < 270) {
+        popperPosition = "right-end";
+      } else if (rotation >= 270 && rotation < 360) {
+        popperPosition = "right-start";
+      }
+    }
+  };
 
-  // Popper v2
-  var popperInstance = Popper.createPopper($("#popper-reference")[0], $("#popper-popover")[0], {
-    placement: "right-start",
-    // strategy: 'fixed',
+  const popperBoundaryContainer = $("#canvas-div-container")[0];
+  popperInstance = Popper.createPopper($("#popper-reference")[0], $("#popper-popover")[0], {
+    placement: popperPosition,
     modifiers: [
       {
         name: "offset",
@@ -82,22 +84,15 @@ $(document).ready(function() {
         name: "flip",
         enabled: true,
         options: {
-          boundary: popperBoundaryContainer[0]
+          boundary: popperBoundaryContainer
         }
-      }
+      },
+      // YO: Comment this out if you want to try out default positioning.
+      followPopoverOnRotationModifier
     ]
   });
 
-  // Popper V1
-  // var popperInstance = new Popper($("#popper-reference")[0], $("#popper-popover")[0], {
-  //   placement: "right-start",
-  //   modifiers: {
-  //     preventOverflow: {
-  //       boundariesElement: popperBoundaryContainer[0]
-  //     }
-  //   }
-  // });
-
+  // Setting up fabric events.
   canvas.on("object:moving", function(markup) {
     updatePopperReference(markup);
     popperInstance.update();
@@ -108,8 +103,7 @@ $(document).ready(function() {
   });
   canvas.on("object:rotating", function(markup) {
     updatePopperReference(markup);
+    updatePopperPlacement(popperInstance, popperPosition);
     popperInstance.update();
   });
-
-  canvas.add(rect);
 });
